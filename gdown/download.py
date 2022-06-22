@@ -72,6 +72,7 @@ def download(
     id=None,
     fuzzy=False,
     resume=False,
+    download_range=None
 ):
     """Download file from URL.
 
@@ -100,6 +101,10 @@ def download(
     resume: bool
         Resume the download from existing tmp file if possible.
         Default is False.
+    download_range: list or None
+        The range of file to download. (e.g., [0, None] or [128, 256])
+        If the None is specified, the whole file will be download or the download will resume.
+        This paramter cannot be used with resume
 
     Returns
     -------
@@ -234,6 +239,15 @@ def download(
 
     if tmp_file is not None and f.tell() != 0:
         headers["Range"] = "bytes={}-".format(f.tell())
+        res = sess.get(url, headers=headers, stream=True, verify=verify)
+
+    if download_range is not None:
+        constructed_range = "bytes={}-{}".format(
+            download_range[0],
+            download_range[1] if download_range[1] is not None else ""
+        )
+
+        headers["Range"] = constructed_range
         res = sess.get(url, headers=headers, stream=True, verify=verify)
 
     if not quiet:

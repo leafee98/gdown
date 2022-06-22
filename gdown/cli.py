@@ -114,6 +114,11 @@ def main():
         help="(folder only) asserts that is ok to download max "
         "{max} files per folder.".format(max=MAX_NUMBER_FILES),
     )
+    parser.add_argument(
+        "--range",
+        help="the range of file to download, (e.g., --range 0-1024). "
+        "will not resume download if use this option."
+    )
 
     args = parser.parse_args()
 
@@ -140,6 +145,15 @@ def main():
             url = None
             id = args.url_or_id
 
+    download_range = None
+    if args.range:
+        download_range = args.range.split('-')
+        for i in range(len(download_range)):
+            if len(download_range[i]):
+                download_range[i] = int(download_range[i])
+            else:
+                download_range[i] = None
+
     if args.folder:
         filenames = download_folder(
             url=url,
@@ -163,7 +177,8 @@ def main():
             verify=not args.no_check_certificate,
             id=id,
             fuzzy=args.fuzzy,
-            resume=args.continue_,
+            resume=args.continue_ and download_range is None,
+            download_range=download_range
         )
         success = filename is not None
 
